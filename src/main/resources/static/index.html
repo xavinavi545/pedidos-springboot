@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión de Pedidos</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f8f8f8; }
+    h1 { color: #2c3e50; }
+    form { margin-bottom: 2rem; }
+    input, button { padding: 0.5rem; margin: 0.2rem; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 0.5rem; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Lista de Pedidos</h1>
+
+    <form @submit.prevent="crearPedido">
+      <input v-model="nuevoPedido.descripcion" placeholder="Descripción" required />
+      <input v-model="nuevoPedido.estado" placeholder="Estado" required />
+      <button type="submit">Crear Pedido</button>
+    </form>
+
+    <table v-if="pedidos.length">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Descripción</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="pedido in pedidos" :key="pedido.id">
+          <td>{{ pedido.id }}</td>
+          <td>{{ pedido.descripcion }}</td>
+          <td>{{ pedido.estado }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p v-else>No hay pedidos registrados.</p>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          pedidos: [],
+          nuevoPedido: {
+            descripcion: '',
+            estado: ''
+          }
+        };
+      },
+      mounted() {
+        this.cargarPedidos();
+      },
+      methods: {
+        async cargarPedidos() {
+          try {
+            const res = await fetch('/api/pedidos');
+            this.pedidos = await res.json();
+          } catch (err) {
+            alert("Error al cargar pedidos");
+            console.error(err);
+          }
+        },
+        async crearPedido() {
+          try {
+            await fetch('/api/pedidos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(this.nuevoPedido)
+            });
+            this.nuevoPedido.descripcion = '';
+            this.nuevoPedido.estado = '';
+            this.cargarPedidos();
+          } catch (err) {
+            alert("Error al crear pedido");
+            console.error(err);
+          }
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
